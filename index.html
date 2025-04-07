@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dot Reveal Game</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: beige;
+      font-family: "Times New Roman", serif;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .container {
+      display: grid;
+      justify-content: center;
+      align-content: center;
+      position: relative;
+      margin-bottom: 20px;
+    }
+
+    .dot {
+      width: 50px;
+      height: 50px;
+      perspective: 800px;
+    }
+
+    .dot-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s ease;
+      border-radius: 50%;
+    }
+
+    .dot.flipped .dot-inner {
+      transform: rotateY(180deg);
+    }
+
+    .front, .back {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      backface-visibility: hidden;
+    }
+
+    .front {
+      background-color: black;
+    }
+
+    .back {
+      transform: rotateY(180deg);
+      overflow: hidden;
+    }
+
+    .back img {
+      position: absolute;
+      width: 500px;
+      height: 300px;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+
+    .description-container {
+      text-align: center;
+      color: sienna;
+      font-size: 18px;
+      margin-top: 20px;
+    }
+
+    .message {
+      display: none;
+      font-size: 36pt;
+      color: sienna;
+      text-align: center;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+    }
+  </style>
+</head>
+<body>
+  <div class="container" id="grid"></div>
+  
+  <div class="description-container" id="descriptionContainer">
+    <p id="paintingDescription"></p>
+  </div>
+
+  <div class="message" id="completionMessage">Congratulations! You have completed the paintings.</div>
+
+  <script>
+    const container = document.getElementById("grid");
+    const message = document.getElementById("completionMessage");
+    const descriptionContainer = document.getElementById("descriptionContainer");
+    const paintingDescription = document.getElementById("paintingDescription");
+    const dotSize = 50;
+    const cols = 10;
+    const rows = 6;
+
+    const images = ["images/pearl.jpg", "images/kiss.jpg"];
+    const descriptions = [
+      "Girl with a Pearl Earring, Johannes Vermeer, 1665, Oil on canvas, 17.5 × 15 in",
+      "The Kiss, Gustav Klimt, 1907–1908, Gold leaf and oil on canvas, 71 × 71 in"
+    ];
+    let currentImageIndex = 0;
+    let totalDots = cols * rows;
+    let clickedDots = 0;
+
+    function createDots(imageUrl) {
+      container.innerHTML = "";
+      clickedDots = 0;
+      totalDots = cols * rows;
+
+      container.style.display = "grid";
+      message.style.display = "none";
+      descriptionContainer.style.display = "block";  // Show description container as soon as game starts
+      container.style.gridTemplateColumns = `repeat(${cols}, ${dotSize}px)`;
+      container.style.gridTemplateRows = `repeat(${rows}, ${dotSize}px)`;
+
+      // Show description for current artwork
+      paintingDescription.textContent = descriptions[currentImageIndex];
+
+      for (let row = 0; row < rows; row++) {
+        for (let col = 0; col < cols; col++) {
+          const dot = document.createElement("div");
+          dot.classList.add("dot");
+
+          const dotInner = document.createElement("div");
+          dotInner.classList.add("dot-inner");
+
+          const front = document.createElement("div");
+          front.classList.add("front");
+
+          const back = document.createElement("div");
+          back.classList.add("back");
+
+          const img = document.createElement("img");
+          img.src = imageUrl;
+          img.alt = "Image failed to load";
+          img.style.transform = `translate(-${col * dotSize}px, -${row * dotSize}px)`;
+
+          back.appendChild(img);
+          dotInner.appendChild(front);
+          dotInner.appendChild(back);
+          dot.appendChild(dotInner);
+
+          dot.addEventListener("click", () => {
+            if (!dot.classList.contains("flipped")) {
+              dot.classList.add("flipped");
+              clickedDots++;
+              checkCompletion();
+            }
+          });
+
+          container.appendChild(dot);
+        }
+      }
+    }
+
+    function checkCompletion() {
+      if (clickedDots === totalDots) {
+        setTimeout(() => {
+          // Hide description and show completion message
+          descriptionContainer.style.display = "none";
+          container.style.display = "none";
+          message.style.display = "block";
+
+          // Move to next artwork if it exists
+          if (currentImageIndex < images.length - 1) {
+            currentImageIndex++;
+            createDots(images[currentImageIndex]);
+          }
+        }, 600);
+      }
+    }
+
+    window.onload = () => {
+      createDots(images[currentImageIndex]);
+    };
+
+    window.onresize = () => {
+      createDots(images[currentImageIndex]);
+    };
+  </script>
+</body>
+</html>
